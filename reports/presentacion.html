@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Segmentación de Vendedores – MercadoLibre</title>
+  <style>
+    :root {
+      --meli-yellow: #FFE600;
+      --meli-blue: #3483FA;
+      --meli-dark: #1a1a2e;
+      --meli-gray: #f5f5f5;
+      --meli-text: #2d2d2d;
+      --accent: #3483FA;
+      --success: #00a650;
+      --warn: #ff7733;
+      --slide-w: 1100px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: var(--meli-text);
+      scroll-behavior: smooth;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(26,26,46,0.97);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 24px;
+      border-bottom: 2px solid var(--meli-yellow);
+      flex-wrap: wrap;
+    }
+
+    nav span {
+      color: var(--meli-yellow);
+      font-weight: 700;
+      font-size: 13px;
+      margin-right: 12px;
+      white-space: nowrap;
+    }
+
+    nav a {
+      color: #ccc;
+      text-decoration: none;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+
+    nav a:hover { background: var(--meli-yellow); color: #000; }
+
+    /* ── SLIDES ── */
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 90px 20px 60px;
+    }
+
+    .slide-inner {
+      max-width: var(--slide-w);
+      width: 100%;
+    }
+
+    /* ── COVER ── */
+    #cover {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+
+    .cover-badge {
+      display: inline-block;
+      background: var(--meli-yellow);
+      color: #000;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+    }
+
+    .cover-title {
+      font-size: clamp(32px, 5vw, 58px);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .cover-title span { color: var(--meli-yellow); }
+
+    .cover-sub {
+      font-size: 18px;
+      color: #aac;
+      margin-bottom: 40px;
+      max-width: 640px;
+    }
+
+    .cover-stats {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .cover-stat { text-align: center; }
+
+    .cover-stat .num {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--meli-yellow);
+      display: block;
+    }
+
+    .cover-stat .lbl {
+      font-size: 12px;
+      color: #889;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── SLIDE HEADERS ── */
+    .slide-num {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--meli-blue);
+      margin-bottom: 8px;
+    }
+
+    .slide-title {
+      font-size: clamp(24px, 3.5vw, 38px);
+      font-weight: 900;
+      margin-bottom: 8px;
+      line-height: 1.15;
+    }
+
+    .slide-subtitle {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 36px;
+    }
+
+    /* ── BACKGROUNDS ── */
+    .bg-white { background: #fff; }
+    .bg-gray  { background: var(--meli-gray); }
+    .bg-dark  { background: var(--meli-dark); color: #fff; }
+    .bg-dark .slide-num { color: var(--meli-yellow); }
+    .bg-dark .slide-title { color: #fff; }
+    .bg-dark .slide-subtitle { color: #889; }
+
+    /* ── CARDS GRID ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+    @media (max-width: 700px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.07);
+      border-left: 4px solid var(--meli-blue);
+    }
+
+    .card.yellow { border-left-color: var(--meli-yellow); }
+    .card.green  { border-left-color: #00a650; }
+    .card.orange { border-left-color: var(--warn); }
+    .card.purple { border-left-color: #8b5cf6; }
+
+    .card h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #333; }
+    .card p  { font-size: 13px; color: #555; line-height: 1.6; }
+
+    .card-dark {
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .card-dark h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #FFE600; }
+    .card-dark p  { font-size: 13px; color: #bbb; line-height: 1.6; }
+
+    /* ── BIG STAT ── */
+    .big-stat { text-align: center; padding: 28px 20px; }
+
+    .big-stat .number {
+      font-size: clamp(40px, 6vw, 72px);
+      font-weight: 900;
+      color: var(--meli-blue);
+      line-height: 1;
+      display: block;
+    }
+
+    .big-stat .label {
+      font-size: 13px;
+      color: #888;
+      margin-top: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── CLUSTER CARDS ── */
+    .cluster-card {
+      border-radius: 16px;
+      padding: 22px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cluster-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+    }
+
+    .c0 { background: #fff8e1; } .c0::before { background: #FFC107; }
+    .c1 { background: #e8f4ff; } .c1::before { background: #3483FA; }
+    .c2 { background: #e8f8f0; } .c2::before { background: #00a650; }
+    .c3 { background: #f3e8ff; } .c3::before { background: #8b5cf6; }
+
+    .cluster-card .pct {
+      font-size: 28px;
+      font-weight: 900;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .c0 .pct { color: #e65100; }
+    .c1 .pct { color: #1565c0; }
+    .c2 .pct { color: #1b5e20; }
+    .c3 .pct { color: #4a1580; }
+
+    .cluster-card .name {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .cluster-card .stat-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .stat-pill {
+      font-size: 11px;
+      background: rgba(0,0,0,.07);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-weight: 600;
+    }
+
+    /* ── TABLE ── */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+    th {
+      background: var(--meli-blue);
+      color: #fff;
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #e8e8e8;
+      vertical-align: middle;
+    }
+
+    tr:nth-child(even) td { background: #fafafa; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge-green  { background: #d4edda; color: #155724; }
+    .badge-yellow { background: #fff3cd; color: #856404; }
+    .badge-blue   { background: #cce5ff; color: #004085; }
+    .badge-orange { background: #ffe5d0; color: #a0400a; }
+    .badge-purple { background: #f3e8ff; color: #4a1580; }
+
+    /* ── METRICS ROW ── */
+    .metrics-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .metric-box {
+      flex: 1;
+      min-width: 160px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 22px 18px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.07);
+      text-align: center;
+    }
+
+    .metric-box .val {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--meli-blue);
+      display: block;
+    }
+
+    .metric-box .met-label { font-size: 12px; color: #888; margin-top: 4px; }
+    .metric-box .met-note  { font-size: 11px; color: #00a650; font-weight: 600; margin-top: 4px; }
+
+    /* ── STEPS ── */
+    .steps { display: flex; gap: 0; flex-wrap: wrap; }
+
+    .step {
+      flex: 1;
+      min-width: 150px;
+      position: relative;
+      padding: 20px 16px 20px 36px;
+      background: #fff;
+      border-top: 4px solid var(--meli-blue);
+      margin: 0 4px 8px;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .step .sn {
+      position: absolute;
+      top: -16px; left: 12px;
+      width: 28px; height: 28px;
+      background: var(--meli-blue);
+      color: #fff;
+      border-radius: 50%;
+      font-weight: 900;
+      font-size: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .step h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .step p  { font-size: 11px; color: #777; }
+
+    /* ── HIGHLIGHT BOX ── */
+    .highlight {
+      background: linear-gradient(135deg, var(--meli-blue), #1a5ccc);
+      color: #fff;
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin: 24px 0;
+    }
+
+    .highlight h3 { font-size: 18px; margin-bottom: 8px; }
+    .highlight p  { font-size: 14px; opacity: .9; line-height: 1.6; }
+
+    .highlight-yellow { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .highlight-green  { background: linear-gradient(135deg, #00a650, #007a3c); }
+
+    /* ── QUOTE ── */
+    .quote {
+      border-left: 5px solid var(--meli-yellow);
+      padding: 16px 20px;
+      background: #fffbea;
+      border-radius: 0 12px 12px 0;
+      font-size: 15px;
+      font-style: italic;
+      color: #555;
+      margin: 20px 0;
+    }
+
+    /* ── PIPELINE ── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 24px 0;
+    }
+
+    .pipe-box {
+      background: #fff;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      flex: 1;
+      min-width: 110px;
+    }
+
+    .pipe-box small { display: block; font-weight: 400; color: #888; font-size: 10px; margin-top: 3px; }
+    .pipe-arrow { font-size: 18px; color: #bbb; flex-shrink: 0; }
+
+    /* ── HYPOTHESIS ── */
+    .hyp-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .hyp-row:last-child { border-bottom: none; }
+
+    .hyp-id {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--meli-blue);
+      color: #fff;
+      font-weight: 900;
+      font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .hyp-body { flex: 1; }
+    .hyp-body strong { font-size: 13px; display: block; margin-bottom: 4px; }
+    .hyp-body span   { font-size: 12px; color: #666; }
+
+    /* ── ICON BULLETS ── */
+    .icon-list { list-style: none; }
+
+    .icon-list li {
+      padding: 8px 0;
+      font-size: 14px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .icon-list li .ico { flex-shrink: 0; font-size: 16px; }
+
+    /* ── NEXT STEPS ── */
+    .next-step {
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .next-step .ns-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      font-weight: 900;
+      font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .next-step h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .next-step p  { font-size: 12px; line-height: 1.5; color: #555; }
+
+    /* ── GENAI FLOW ── */
+    .genai-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .flow-box {
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 13px;
+    }
+
+    .flow-input  { background: #e8f4ff; border-left: 4px solid #3483FA; }
+    .flow-model  { background: #fff3cd; border-left: 4px solid #FFC107; text-align: center; }
+    .flow-output { background: #e8f8f0; border-left: 4px solid #00a650; }
+
+    .flow-box strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; color: #888; }
+
+    .flow-arrow-v { text-align: center; font-size: 22px; color: #bbb; line-height: 1; }
+
+    /* ── GENAI EXAMPLE OUTPUT ── */
+    .genai-output {
+      background: #0d1117;
+      border-radius: 12px;
+      padding: 20px 24px;
+      border: 1px solid #30363d;
+      font-size: 12px;
+      line-height: 1.7;
+      color: #c9d1d9;
+    }
+
+    .genai-output .go-header {
+      color: #58a6ff;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .genai-output .go-section { color: #e6edf3; font-weight: 700; margin-top: 10px; }
+    .genai-output .go-text { color: #8b949e; }
+    .genai-output .go-bullet { color: #7ee787; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #0a0a1a;
+      color: #555;
+      text-align: center;
+      padding: 32px 20px;
+      font-size: 12px;
+    }
+
+    footer strong { color: var(--meli-yellow); }
+
+    /* ── DIVIDER ── */
+    hr.divider {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #ddd, transparent);
+      margin: 28px 0;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 700px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .tag {
+      display: inline-block;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 2px 8px;
+      margin: 2px;
+    }
+
+    /* ── EDA INSIGHT CARDS ── */
+    .eda-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      border-top: 3px solid var(--meli-blue);
+    }
+
+    .eda-card .eda-num {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--meli-blue);
+      display: block;
+      line-height: 1;
+    }
+
+    .eda-card .eda-label { font-size: 12px; color: #888; margin-top: 4px; }
+    .eda-card .eda-arrow { font-size: 11px; color: #00a650; font-weight: 600; margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <span>ML Sellers</span>
+  <a href="#cover">Inicio</a>
+  <a href="#problema">Problema</a>
+  <a href="#hipotesis">Hipótesis &amp; EDA</a>
+  <a href="#tecnica">Solución Técnica</a>
+  <a href="#resultados">Resultados</a>
+  <a href="#genai">GenAI</a>
+  <a href="#conclusiones">Conclusiones</a>
+</nav>
+
+
+<!-- ═══ 0. COVER ═══ -->
+<div class="slide" id="cover">
+  <div class="slide-inner">
+    <div class="cover-badge">Challenge MercadoLibre</div>
+    <h1 class="cover-title">Segmentación de<br /><span>Vendedores</span></h1>
+    <p class="cover-sub">Pipeline de clustering y asesor de estrategia comercial generativa para el ecosistema de sellers de MercadoLibre. Metodología CRISP-DM end-to-end.</p>
+    <div class="cover-stats">
+      <div class="cover-stat">
+        <span class="num">185K</span>
+        <span class="lbl">Publicaciones</span>
+      </div>
+      <div class="cover-stat">
+        <span class="num">46K</span>
+        <span class="lbl">Vendedores</span>
+      </div>
+      <div class="cover-stat">
+        <span class="num">54</span>
+        <span class="lbl">Categorías</span>
+      </div>
+      <div class="cover-stat">
+        <span class="num">4</span>
+        <span class="lbl">Segmentos</span>
+      </div>
+      <div class="cover-stat">
+        <span class="num">0.58</span>
+        <span class="lbl">Silhouette</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ 1. PROBLEMA ═══ -->
+<div class="slide bg-white" id="problema">
+  <div class="slide-inner">
+    <div class="slide-num">01 — Problema &amp; Motivación</div>
+    <h2 class="slide-title">¿Por qué segmentar vendedores?</h2>
+    <p class="slide-subtitle">El ecosistema de MercadoLibre no es homogéneo — tratar a todos los sellers por igual desperdicia recursos y pierde oportunidades.</p>
+
+    <div class="two-col">
+      <div>
+        <div class="quote">
+          El <strong>23% de los vendedores</strong> concentra el <strong>66% del stock disponible</strong> en la plataforma — pero reciben la misma atención comercial que el otro 77%.
+        </div>
+
+        <p style="font-size:14px; color:#555; line-height:1.7; margin-bottom:16px;">
+          Un snapshot del <strong>1 de agosto de 2024</strong> con 185.250 publicaciones reveló que precio, volumen, logística y reputación varían drásticamente entre vendedores. La plataforma no distingue entre un vendedor ocasional y un distribuidor mayorista.
+        </p>
+
+        <p style="font-size:14px; color:#555; line-height:1.7;">
+          La solución: <strong>identificar arquetipos de sellers automáticamente</strong> y generar estrategias comerciales personalizadas por segmento — sin intervención humana por seller.
+        </p>
+      </div>
+
+      <div>
+        <div class="card yellow" style="margin-bottom:16px;">
+          <h3>⚠️ Problema de Negocio</h3>
+          <p>Sin segmentación, los equipos comerciales diseñan campañas genéricas → bajo impacto, recursos mal asignados y oportunidades no aprovechadas en los segmentos de mayor valor.</p>
+        </div>
+        <div class="card" style="margin-bottom:16px;">
+          <h3>🎯 Objetivo Principal</h3>
+          <p>Segmentar los ~46.600 vendedores en grupos accionables usando sus datos de catálogo, precios, logística y reputación mediante clustering no supervisado.</p>
+        </div>
+        <div class="card green">
+          <h3>🤖 Objetivo Secundario</h3>
+          <p>Generar automáticamente estrategias comerciales personalizadas para cada seller usando un LLM, escalando a decenas de miles de vendedores sin intervención manual.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ 2. HIPÓTESIS & EDA ═══ -->
+<div class="slide bg-gray" id="hipotesis">
+  <div class="slide-inner">
+    <div class="slide-num">02 — Hipótesis, Datos &amp; EDA</div>
+    <h2 class="slide-title">¿Qué información buscamos y para qué?</h2>
+    <p class="slide-subtitle">Cuatro hipótesis guiaron qué variables extraer y cómo construir las features del modelo.</p>
+
+    <div class="two-col" style="margin-bottom:28px;">
+      <div style="background:#fff; border-radius:16px; padding:24px; box-shadow:0 2px 16px rgba(0,0,0,.06);">
+        <h3 style="font-size:14px; margin-bottom:16px; color:#333;">Hipótesis de partida</h3>
+        <div class="hyp-row">
+          <div class="hyp-id">H1</div>
+          <div class="hyp-body">
+            <strong>Los sellers difieren significativamente en catálogo y precios.</strong>
+            <span>Stock: mediana 8 vs. media 307. Precio: mediana $138K vs. máx $4.77M. → <span class="badge badge-green">Confirmada</span></span>
+          </div>
+        </div>
+        <div class="hyp-row">
+          <div class="hyp-id">H2</div>
+          <div class="hyp-body">
+            <strong>Un grupo pequeño concentra volumen desproporcionado.</strong>
+            <span>23.3% de vendedores acumula 66.3% del stock. → <span class="badge badge-green">Confirmada</span></span>
+          </div>
+        </div>
+        <div class="hyp-row">
+          <div class="hyp-id">H3</div>
+          <div class="hyp-body">
+            <strong>Estrategia de precios correlaciona con amplitud de catálogo.</strong>
+            <span>Confirmada para C0, C1, C3. C2 (Mayorista) es excepción: catálogo amplio + precio homogéneo. → <span class="badge badge-yellow">Confirmada parcialmente</span></span>
+          </div>
+        </div>
+        <div class="hyp-row">
+          <div class="hyp-id">H4</div>
+          <div class="hyp-body">
+            <strong>Existen arquetipos recuperables via clustering no supervisado.</strong>
+            <span>Silhouette 0.58 &gt;&gt; umbral 0.35. → <span class="badge badge-green">Confirmada</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="font-size:14px; margin-bottom:16px; color:#333;">Hallazgos EDA que guiaron el modelo</h3>
+        <div class="grid-2" style="gap:12px;">
+          <div class="eda-card">
+            <span class="eda-num">73%</span>
+            <div class="eda-label">Nulos en <code>regular_price</code></div>
+            <div class="eda-arrow">→ Feature de % descuento descartada; se usó amplitud de precios</div>
+          </div>
+          <div class="eda-card" style="border-top-color:#FFC107;">
+            <span class="eda-num" style="color:#e65100;">27%</span>
+            <div class="eda-label">Publicaciones con descuento activo</div>
+            <div class="eda-arrow">→ Descuento no es estrategia dominante; se confirmó H3</div>
+          </div>
+          <div class="eda-card" style="border-top-color:#00a650;">
+            <span class="eda-num" style="color:#1b5e20;">17×</span>
+            <div class="eda-label">Diferencia stock_mean C2 vs C0</div>
+            <div class="eda-arrow">→ RobustScaler obligatorio por outliers extremos</div>
+          </div>
+          <div class="eda-card" style="border-top-color:#8b5cf6;">
+            <span class="eda-num" style="color:#4a1580;">54</span>
+            <div class="eda-label">Categorías únicas</div>
+            <div class="eda-arrow">→ Índice Herfindahl para especialización, no dummy encoding</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 12px rgba(0,0,0,.06);">
+          <p style="font-size:12px; font-weight:700; color:#333; margin-bottom:8px;">10 features construidas por seller</p>
+          <div>
+            <span class="tag">stock_total</span>
+            <span class="tag">price_mean</span>
+            <span class="tag">price_range</span>
+            <span class="tag">pct_usado</span>
+            <span class="tag">rep_score</span>
+            <span class="tag">herfindahl_idx</span>
+            <span class="tag">logistica_XD</span>
+            <span class="tag">logistica_DS</span>
+            <span class="tag">logistica_FBM</span>
+            <span class="tag">pct_descuento</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ 3. TÉCNICA ═══ -->
+<div class="slide bg-white" id="tecnica">
+  <div class="slide-inner">
+    <div class="slide-num">03 — Explicación Técnica</div>
+    <h2 class="slide-title">Cómo se construyó la solución</h2>
+    <p class="slide-subtitle">Metodología CRISP-DM en 6 notebooks · KMeans · RobustScaler · LangChain LCEL + Claude</p>
+
+    <div class="pipeline">
+      <div class="pipe-box">CSV Raw<small>185K filas</small></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">Preprocesamiento<small>limpieza + tipos</small></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">Feature Eng.<small>10 vars / seller</small></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">RobustScaler<small>normalización</small></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">KMeans k=4<small>Elbow + Silhouette</small></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">Perfiles MD<small>cluster_profiles.md</small></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box">LLM Estrategia<small>claude-sonnet-4-6</small></div>
+    </div>
+
+    <div class="two-col" style="margin-top:28px;">
+      <div>
+        <h3 style="font-size:16px; margin-bottom:16px;">Decisiones de diseño clave</h3>
+        <ul class="icon-list">
+          <li>
+            <span class="ico">⚖️</span>
+            <div><strong>RobustScaler sobre StandardScaler:</strong> stock y precio tienen outliers extremos (máx 17× la media). El escalado estándar los distorsiona; RobustScaler usa mediana e IQR.</div>
+          </li>
+          <li>
+            <span class="ico">📐</span>
+            <div><strong>k=4 via Elbow + Silhouette:</strong> se evaluaron k=2 a 8. El codo aparece en k=4 y el Silhouette Score alcanza su máximo (0.58) en ese punto.</div>
+          </li>
+          <li>
+            <span class="ico">🔵</span>
+            <div><strong>KMeans sobre DBSCAN:</strong> la densidad de sellers es relativamente uniforme y se necesitaban clusters interpretables para negocio — DBSCAN genera ruido no accionable.</div>
+          </li>
+          <li>
+            <span class="ico">📄</span>
+            <div><strong>Perfiles en Markdown:</strong> el archivo <code>cluster_profiles.md</code> se inyecta completo en el prompt del LLM. Actualizar los perfiles no requiere reentrenar el modelo.</div>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 style="font-size:16px; margin-bottom:16px;">Métricas de evaluación del clustering</h3>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="background:#f8f9fa; border-radius:12px; padding:16px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px;">Silhouette Score</strong>
+              <div style="font-size:11px; color:#888;">Cohesión intra-cluster vs. separación inter-cluster (−1 a 1)</div>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:26px; font-weight:900; color:#3483FA;">0.58</span>
+              <div style="font-size:11px; color:#00a650; font-weight:600;">Umbral mínimo: 0.35 ✓ (+66%)</div>
+            </div>
+          </div>
+          <div style="background:#f8f9fa; border-radius:12px; padding:16px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px;">Calinski-Harabasz</strong>
+              <div style="font-size:11px; color:#888;">Ratio de dispersión inter / intra cluster</div>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:26px; font-weight:900; color:#3483FA;">33.694</span>
+              <div style="font-size:11px; color:#888;">Mayor = mejor separación</div>
+            </div>
+          </div>
+          <div style="background:#f8f9fa; border-radius:12px; padding:16px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <strong style="font-size:13px;">Davies-Bouldin</strong>
+              <div style="font-size:11px; color:#888;">Similitud promedio entre clusters</div>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:26px; font-weight:900; color:#3483FA;">0.71</span>
+              <div style="font-size:11px; color:#888;">Menor = clusters más compactos</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; padding:14px 16px; background:#fffbea; border-left:4px solid #FFC107; border-radius:0 10px 10px 0;">
+          <p style="font-size:12px; color:#555; line-height:1.6;"><strong>Validación adicional:</strong> los 4 arquetipos son interpretables por el equipo de negocio y traducibles a acciones concretas — criterio cualitativo tan importante como el cuantitativo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ 4. RESULTADOS ═══ -->
+<div class="slide bg-gray" id="resultados">
+  <div class="slide-inner">
+    <div class="slide-num">04 — Resultados e Insights</div>
+    <h2 class="slide-title">Los 4 arquetipos de sellers</h2>
+    <p class="slide-subtitle">Cada segmento tiene una identidad única definida por combinaciones distintas de logística, precio, stock y reputación.</p>
+
+    <div class="grid-2" style="margin-bottom:24px;">
+      <div class="cluster-card c0">
+        <span class="pct">75.1%</span>
+        <div class="name">C0 · Explorador / Ocasional</div>
+        <p style="font-size:12px; color:#555; margin-bottom:8px;">
+          Operación pequeña. Precios en banda estrecha. Mayor proporción de usados (24%). Reputación light_green/yellow. Catálogo concentrado.
+        </p>
+        <div class="stat-row">
+          <span class="stat-pill">Stock: 19u</span>
+          <span class="stat-pill">Amplitud: $120</span>
+          <span class="stat-pill">Usados: 24%</span>
+          <span class="stat-pill">Ingreso proxy: $15.590</span>
+        </div>
+      </div>
+
+      <div class="cluster-card c1">
+        <span class="pct">7.1%</span>
+        <div class="name">C1 · Exclusivo / Alto Ticket</div>
+        <p style="font-size:12px; color:#555; margin-bottom:8px;">
+          Menor stock pero precios más altos. Mayor amplitud de precios: conviven artículos accesibles con productos premium. Mejor reputación ponderada.
+        </p>
+        <div class="stat-row">
+          <span class="stat-pill">Stock: 32u</span>
+          <span class="stat-pill">Amplitud: $2.645</span>
+          <span class="stat-pill">Rep: 6.84</span>
+          <span class="stat-pill">Ingreso proxy: $45.840</span>
+        </div>
+      </div>
+
+      <div class="cluster-card c2">
+        <span class="pct">9.1%</span>
+        <div class="name">C2 · Consolidado / Mayorista</div>
+        <p style="font-size:12px; color:#555; margin-bottom:8px;">
+          Stock masivo (8× el siguiente cluster). Precios homogéneos y bajos. 99% nuevos. Logística DS (depósito propio). Estrategia de volumen puro.
+        </p>
+        <div class="stat-row">
+          <span class="stat-pill">Stock: 327u</span>
+          <span class="stat-pill">Amplitud: $168</span>
+          <span class="stat-pill">Nuevos: 99%</span>
+          <span class="stat-pill">Ingreso proxy: $205.897</span>
+        </div>
+      </div>
+
+      <div class="cluster-card c3">
+        <span class="pct">8.7%</span>
+        <div class="name">C3 · Prometedor / Tienda Profesional</div>
+        <p style="font-size:12px; color:#555; margin-bottom:8px;">
+          Mejor reputación (silver). Logística más robusta: FBM + XD. Catálogo diversificado. Mayor aplicación de descuentos. Mayor potencial de crecimiento.
+        </p>
+        <div class="stat-row">
+          <span class="stat-pill">Stock: 72u</span>
+          <span class="stat-pill">Amplitud: $1.368</span>
+          <span class="stat-pill">Rep: silver</span>
+          <span class="stat-pill">Ingreso proxy: $89.404</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen en tabla -->
+    <div style="background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 2px 16px rgba(0,0,0,.07); margin-bottom:20px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Segmento</th>
+            <th>% Sellers</th>
+            <th>% Stock</th>
+            <th>Ingreso proxy prom.</th>
+            <th>Palanca principal</th>
+            <th>Prioridad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span style="color:#e65100; font-weight:700;">C0 Explorador</span></td>
+            <td>75.1%</td>
+            <td>23.0%</td>
+            <td>$15.590</td>
+            <td>Activación y retención</td>
+            <td><span class="badge badge-yellow">Base</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:#1565c0; font-weight:700;">C1 Exclusivo</span></td>
+            <td>7.1%</td>
+            <td>10.6%</td>
+            <td>$45.840</td>
+            <td>Confianza y expansión de catálogo</td>
+            <td><span class="badge badge-blue">Alta</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:#1b5e20; font-weight:700;">C2 Consolidado</span></td>
+            <td>9.1%</td>
+            <td>43.1%</td>
+            <td>$205.897</td>
+            <td>Rotación de inventario y visibilidad</td>
+            <td><span class="badge badge-green">Crítica</span></td>
+          </tr>
+          <tr>
+            <td><span style="color:#4a1580; font-weight:700;">C3 Prometedor</span></td>
+            <td>8.7%</td>
+            <td>23.2%</td>
+            <td>$89.404</td>
+            <td>Escala logística y diversificación</td>
+            <td><span class="badge badge-purple">Alta</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="highlight">
+      <h3>💡 Insight estratégico clave</h3>
+      <p>C2 y C3 suman solo el <strong>17.8% de sellers</strong> pero generan el <strong>66% del stock y el mayor ingreso proxy</strong>. Son el segmento de máxima prioridad comercial. C1 y C3 ya tienen las capacidades (reputación, logística, pricing) — solo necesitan <strong>activación estratégica dirigida</strong>.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ 5. GENAI ═══ -->
+<div class="slide bg-dark" id="genai">
+  <div class="slide-inner">
+    <div class="slide-num">05 — Extensión GenAI</div>
+    <h2 class="slide-title">Asesor de Estrategia Comercial</h2>
+    <p class="slide-subtitle">Opción B seleccionada: generación de estrategias personalizadas por seller via LLM · LangChain LCEL + claude-sonnet-4-6</p>
+
+    <div class="two-col">
+      <div>
+        <div class="card-dark" style="margin-bottom:14px;">
+          <h3>¿Por qué la Opción B?</h3>
+          <p>La clasificación (Opción A) resuelve solo el problema de asignación. La estrategia <strong>genera valor de negocio directo</strong> — convierte datos en acciones concretas sin necesitar un analista humano por seller. El clustering ya resolvió el "quién"; el LLM resuelve el "qué hacer".</p>
+        </div>
+
+        <div class="card-dark" style="margin-bottom:14px;">
+          <h3>Arquitectura del prompt</h3>
+          <p><strong>System:</strong> rol de especialista comercial, tono profesional, límite 300 palabras.<br/>
+          <strong>Human:</strong> perfil estadístico completo del cluster (desde <code>cluster_profiles.md</code>) + métricas del seller específico.<br/>
+          <strong>Output:</strong> diagnóstico + 2 iniciativas ordenadas por prioridad + KPI de seguimiento.</p>
+        </div>
+
+        <div class="card-dark">
+          <h3>Escalabilidad y actualización</h3>
+          <p>El perfil del cluster se construye <strong>una vez</strong> y se inyecta como contexto. Actualizar los perfiles (ej. nuevo snapshot) no requiere reentrenar ni cambiar código — solo editar el Markdown.</p>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="color:#FFE600; font-size:13px; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">Flujo LCEL</h3>
+
+        <div class="genai-flow" style="max-width:100%; margin-bottom:16px;">
+          <div class="flow-box flow-input">
+            <strong>Input</strong>
+            cluster_profiles.md + seller_id + cluster + stock + price + categorías + reputación
+          </div>
+          <div class="flow-arrow-v">↓</div>
+          <div class="flow-box flow-model">
+            <strong>ChatPromptTemplate → ChatAnthropic (claude-sonnet-4-6) → StrOutputParser</strong>
+            LangChain LCEL · Temperatura estándar · max_tokens 1024
+          </div>
+          <div class="flow-arrow-v">↓</div>
+          <div class="flow-box flow-output">
+            <strong>Output estructurado</strong>
+            Diagnóstico · Estrategia de crecimiento (2 iniciativas) · KPI de seguimiento
+          </div>
+        </div>
+
+        <div class="genai-output">
+          <div class="go-header">Ejemplo real de output — Seller C2 · Consolidado · Textiles</div>
+          <div class="go-section">1. Diagnóstico</div>
+          <div class="go-text"> Ventaja: Reputación Plata en un segmento de gran volumen. Con 1.774 u. disponibles y precio promedio $235, la reputación actúa como diferenciador real.</div>
+          <div class="go-section">2. Estrategia</div>
+          <div class="go-bullet"> ★ Activar Product Ads en las 10-15 publicaciones de mayor margen (no bajar precio).</div>
+          <div class="go-bullet"> ★ Aplicar -10–15% en publicaciones sin venta &gt;60 días para liberar capital.</div>
+          <div class="go-section">3. KPI</div>
+          <div class="go-text"> Tasa de rotación mensual = unidades vendidas / stock promedio.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ 6. CONCLUSIONES ═══ -->
+<div class="slide bg-white" id="conclusiones">
+  <div class="slide-inner">
+    <div class="slide-num">06 — Conclusiones &amp; Próximos Pasos</div>
+    <h2 class="slide-title">Qué aprendimos y hacia dónde ir</h2>
+    <p class="slide-subtitle">Resultados validados estadísticamente, interpretables por negocio y ejecutables desde el primer día.</p>
+
+    <div class="two-col" style="margin-bottom:28px;">
+      <div>
+        <h3 style="font-size:15px; margin-bottom:16px;">Conclusiones</h3>
+        <ul class="icon-list">
+          <li><span class="ico">✅</span><div><strong>Segmentación estadísticamente válida.</strong> Silhouette 0.58 confirma que los 4 grupos son reales. Los tres índices (Silhouette, Calinski-Harabasz, Davies-Bouldin) son consistentes entre sí.</div></li>
+          <li><span class="ico">📊</span><div><strong>El 75% de sellers (C0) requiere programas de activación básica</strong> — onboarding, mejora de catálogo y construcción de reputación son las palancas de mayor impacto masivo.</div></li>
+          <li><span class="ico">💰</span><div><strong>C2 (Consolidado) es el segmento de mayor ingreso proxy</strong> ($205K prom.) con solo 9.1% de sellers — ROI más alto para intervención comercial puntual.</div></li>
+          <li><span class="ico">🚀</span><div><strong>C3 (Prometedor) tiene el mayor potencial de crecimiento escalable.</strong> Ya tiene logística FBM, reputación silver y catálogo diversificado. Solo necesita la estrategia correcta.</div></li>
+          <li><span class="ico">🤖</span><div><strong>La IA generativa convierte el análisis en acción.</strong> Un equipo comercial puede revisar y ejecutar estrategias pre-generadas para 46K sellers en lugar de crearlas desde cero.</div></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 style="font-size:15px; margin-bottom:16px;">Próximos pasos</h3>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="next-step" style="background:#f0f4ff; border:1px solid #c7d7ff;">
+            <div class="ns-num" style="background:#3483FA; color:#fff;">1</div>
+            <div>
+              <h4 style="color:#1a3a6e;">Series de tiempo</h4>
+              <p>Reentrenar con múltiples snapshots para detectar sellers en transición entre clusters (C0→C3) y anticipar comportamiento antes de que escalen.</p>
+            </div>
+          </div>
+          <div class="next-step" style="background:#f0fff4; border:1px solid #b7f0cc;">
+            <div class="ns-num" style="background:#00a650; color:#fff;">2</div>
+            <div>
+              <h4 style="color:#1a4a2e;">Feedback loop de estrategias</h4>
+              <p>Medir si las estrategias generadas por el LLM mejoran GMV, conversión y reputación real. Cerrar el ciclo para retroalimentar los perfiles de cluster.</p>
+            </div>
+          </div>
+          <div class="next-step" style="background:#fff8e1; border:1px solid #ffe082;">
+            <div class="ns-num" style="background:#FFC107; color:#000;">3</div>
+            <div>
+              <h4 style="color:#4a3000;">Sub-segmentación de C0</h4>
+              <p>El 75% de sellers probablemente tiene sub-grupos internos. Aplicar clustering anidado (k=5 o 6) para mayor granularidad y menor dispersión.</p>
+            </div>
+          </div>
+          <div class="next-step" style="background:#fdf0ff; border:1px solid #e0b7ff;">
+            <div class="ns-num" style="background:#8b5cf6; color:#fff;">4</div>
+            <div>
+              <h4 style="color:#3b0764;">Integración a CRM / producto</h4>
+              <p>Los perfiles + estrategias son input directo para campañas de email, notificaciones push y gestión de cuentas clave — sin rediseño de la infraestructura existente.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="highlight highlight-yellow" style="color:#fff;">
+      <h3>Mensaje para perfiles de negocio</h3>
+      <p>Los 4 arquetipos no son categorías técnicas — son <strong>personas de negocio reales</strong> con necesidades distintas. El análisis convierte 46.600 vendedores anónimos en 4 perfiles accionables. El LLM convierte esos perfiles en estrategias ejecutables <strong>hoy mismo</strong> — sin analistas intermedios, sin escalar costos operativos.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <strong>Segmentación de Vendedores — Challenge MercadoLibre</strong><br/>
+  Pipeline CRISP-DM · KMeans k=4 · Silhouette 0.58 · GenAI con claude-sonnet-4-6<br/>
+  <span style="color:#333; margin-top:8px; display:block;">v0.1.0</span>
+</footer>
+
+</body>
+</html>

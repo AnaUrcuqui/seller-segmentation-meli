@@ -1,0 +1,42 @@
+name: CD – Publicar reportes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "notebooks/**"
+      - "reports/**"
+
+jobs:
+  render-notebooks:
+    name: Generar y publicar reportes HTML
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Configurar Python
+        run: uv python install 3.11
+
+      - name: Instalar dependencias
+        run: uv sync --group dev
+
+      - name: Convertir notebooks a HTML
+        run: |
+          mkdir -p reports/html
+          for nb in notebooks/*.ipynb; do
+            uv run jupyter nbconvert --to html "$nb" --output-dir reports/html/
+          done
+
+      - name: Publicar en GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./reports/html
+          destination_dir: reports
